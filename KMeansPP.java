@@ -18,7 +18,9 @@ public class KMeansPP {
             k = Integer.parseInt(args[1]);
         } else if (args.length == 1) {
             filePath = args[0];
-            k = SomeFunction(); // Placeholder for the function that calculates k
+            // Here if the K is not given, then find it with silhouette
+            k = findOptimalK(filePath);
+            System.out.println(k);
         } else {
             System.out.println("Usage: java KMeansPP <file path> [<number of clusters (k)>]");
             return;
@@ -49,6 +51,77 @@ public class KMeansPP {
         // Print the resulting clusters
         printClusters(names, assignments, k);
     }
+
+    public static int findOptimalK(String filePath) {
+        // Load the data from the CSV file
+        Map<String, double[]> dataMap = readCSV(filePath);
+
+        if (dataMap == null) {
+            throw new IllegalArgumentException("Failed to read data from the CSV file.");
+        }
+
+        List<String> names = new ArrayList<>(dataMap.keySet());
+        double[][] data = new double[names.size()][2];
+        for (int i = 0; i < names.size(); i++) {
+            data[i] = dataMap.get(names.get(i));
+        }
+
+        int maxClusters = 31; // ???
+        double bestSilhouetteScore = Double.NEGATIVE_INFINITY;
+        int bestK = 2;
+
+        for (int k = 2; k <= maxClusters; k++) {
+            double[][] centroids = getKMeansPPCentroids(data, k);
+            int[] assignments = kMeansFit(data, centroids, k);
+            double silhouetteScore = calculateSilhouetteScore(data, assignments, k);
+
+            if (silhouetteScore > bestSilhouetteScore) {
+                bestSilhouetteScore = silhouetteScore;
+                bestK = k;
+            }
+        }
+
+        return bestK;
+    }
+
+
+    public static double calculateSilhouetteScore(double[][] data, int[] assignments, int k) {
+        double totalSilhouetteScore = 0.0;
+        int numInstances = data.length;
+
+        for (int i = 0; i < numInstances; i++) {
+            double[] instance = data[i];
+            int clusterIndex = assignments[i];
+
+            double a = calculateAverageDistance(instance, data, assignments, clusterIndex);
+            double b = Double.POSITIVE_INFINITY;
+
+            for (int j = 0; j < k; j++) {
+                if (j == clusterIndex) continue;
+                double dist = calculateAverageDistance(instance, data, assignments, j);
+                if (dist < b) b = dist;
+            }
+
+            totalSilhouetteScore += (b - a) / Math.max(a, b);
+        }
+
+        return totalSilhouetteScore / numInstances;
+    }
+
+    public static double calculateAverageDistance(double[] instance, double[][] data, int[] assignments, int clusterIndex) {
+        double totalDistance = 0.0;
+        int count = 0;
+
+        for (int i = 0; i < data.length; i++) {
+            if (assignments[i] == clusterIndex) {
+                totalDistance += euclideanDistance(instance, data[i]);
+                count++;
+            }
+        }
+
+        return totalDistance / count;
+    }
+
     public static int SomeFunction() {
         // Placeholder logic to calculate k
         // Implement your own logic here to calculate k based on the data
