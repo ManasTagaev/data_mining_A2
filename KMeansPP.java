@@ -11,14 +11,18 @@ import java.util.Random;
 public class KMeansPP {
 
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.out.println("Usage: java KMeansPlusPlus <file path> <number of clusters (k)>");
+        String filePath;
+        int k;
+        if (args.length == 2) {
+            filePath = args[0];
+            k = Integer.parseInt(args[1]);
+        } else if (args.length == 1) {
+            filePath = args[0];
+            k = SomeFunction(); // Placeholder for the function that calculates k
+        } else {
+            System.out.println("Usage: java KMeansPP <file path> [<number of clusters (k)>]");
             return;
         }
-
-        // Parse command-line arguments
-        String filePath = args[0];
-        int k = Integer.parseInt(args[1]);
 
         // Load the data from the CSV file
         Map<String, double[]> dataMap = readCSV(filePath);
@@ -44,6 +48,11 @@ public class KMeansPP {
 
         // Print the resulting clusters
         printClusters(names, assignments, k);
+    }
+    public static int SomeFunction() {
+        // Placeholder logic to calculate k
+        // Implement your own logic here to calculate k based on the data
+        return 3; // Example fixed value, replace this with your actual calculation logic
     }
 
     public static Map<String, double[]> readCSV(String csvFile) {
@@ -174,13 +183,16 @@ public class KMeansPP {
         for (int i = 0; i < k; i++) {
             clusters.add(new ArrayList<>());
         }
-
+    
         for (int i = 0; i < assignments.length; i++) {
             clusters.get(assignments[i]).add(names.get(i));
         }
-
+    
         for (int i = 0; i < k; i++) {
-            System.out.println("Cluster #" + (i + 1) + " => " + String.join(" ", clusters.get(i)));
+            List<String> cluster = clusters.get(i);
+            cluster.sort(String::compareTo); // Sort the names in the cluster
+            System.out.println("Cluster #" + (i + 1) + " => " + String.join(" ", cluster));
         }
     }
+    
 }
