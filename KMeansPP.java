@@ -1,6 +1,5 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,66 +10,65 @@ import java.util.Random;
 
 public class KMeansPP {
 
+    public static Map<String, double[]> readCSV(String csvFile) {
+        Map<String, double[]> dataMap = new HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+            String line;
+            br.readLine(); // Skip the header
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                String name = values[0];
+                double x = Double.parseDouble(values[1]);
+                double y = Double.parseDouble(values[2]);
+                dataMap.put(name, new double[] { x, y });
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return dataMap;
+    }
+
     public static void main(String[] args) {
-        String filePath;
-        int k;
-        if (args.length == 2) {
-            filePath = args[0];
-            k = Integer.parseInt(args[1]);
-        } else if (args.length == 1) {
-            filePath = args[0];
-            // Here if the K is not given, then find it with silhouette
-            k = findOptimalK(filePath);
-            System.out.println(k);
-        } else {
+
+        if (args.length == 0 || args.length > 2) {
             System.out.println("Usage: java KMeansPP <file path> [<number of clusters (k)>]");
             return;
         }
+        String filePath;
+        filePath = args[0];
 
-        // Load the data from the CSV file
         Map<String, double[]> dataMap = readCSV(filePath);
-
-        // Check if data is not null
         if (dataMap == null) {
             System.out.println("Failed to read data from the CSV file.");
             return;
         }
 
-        // Convert data map to array
         List<String> names = new ArrayList<>(dataMap.keySet());
         double[][] data = new double[names.size()][2];
         for (int i = 0; i < names.size(); i++) {
             data[i] = dataMap.get(names.get(i));
         }
 
-        // Initialize centroids using K-means++ method
-        double[][] centroids = getKMeansPPCentroids(data, k);
+        int k;
+        int[] assignments; 
+        if (args.length == 1) {
+            k = findOptimalK(data);
+            double[][] centroids = getKMeansPPCentroids(data, k);
+            assignments = kMeansFit(data, centroids, k);
+        } else {
+            k = Integer.parseInt(args[1]);
+            double[][] centroids = getKMeansPPCentroids(data, k);
+            assignments = kMeansFit(data, centroids, k);
+            double silhouetteScore = calculateSilhouetteScore(data, assignments, k);
+            System.out.println("Accuracy: " + silhouetteScore); 
 
-        // Fit the K-means algorithm
-        int[] assignments = kMeansFit(data, centroids, k);
-
-        // Print the resulting clusters
+        }
         printClusters(names, assignments, k);
-
-        // Save the resulting clusters to a CSV file
-        saveClustersToCSV(names, assignments, k, "result.csv");
     }
 
-    public static int findOptimalK(String filePath) {
-        // Load the data from the CSV file
-        Map<String, double[]> dataMap = readCSV(filePath);
-
-        if (dataMap == null) {
-            throw new IllegalArgumentException("Failed to read data from the CSV file.");
-        }
-
-        List<String> names = new ArrayList<>(dataMap.keySet());
-        double[][] data = new double[names.size()][2];
-        for (int i = 0; i < names.size(); i++) {
-            data[i] = dataMap.get(names.get(i));
-        }
-
-        int maxClusters = 31; // ???
+    public static int findOptimalK(double[][] data) {
+        int maxClusters = 100;
         double bestSilhouetteScore = Double.NEGATIVE_INFINITY;
         int bestK = 2;
 
@@ -85,9 +83,10 @@ public class KMeansPP {
             }
         }
 
+        System.out.println("Estimated k: " + bestK);
+        System.out.println("Accuracy: " + bestSilhouetteScore);
         return bestK;
     }
-
 
     public static double calculateSilhouetteScore(double[][] data, int[] assignments, int k) {
         double totalSilhouetteScore = 0.0;
@@ -101,9 +100,11 @@ public class KMeansPP {
             double b = Double.POSITIVE_INFINITY;
 
             for (int j = 0; j < k; j++) {
-                if (j == clusterIndex) continue;
+                if (j == clusterIndex)
+                    continue;
                 double dist = calculateAverageDistance(instance, data, assignments, j);
-                if (dist < b) b = dist;
+                if (dist < b)
+                    b = dist;
             }
 
             totalSilhouetteScore += (b - a) / Math.max(a, b);
@@ -112,7 +113,8 @@ public class KMeansPP {
         return totalSilhouetteScore / numInstances;
     }
 
-    public static double calculateAverageDistance(double[] instance, double[][] data, int[] assignments, int clusterIndex) {
+    public static double calculateAverageDistance(double[] instance, double[][] data, int[] assignments,
+            int clusterIndex) {
         double totalDistance = 0.0;
         int count = 0;
 
@@ -126,31 +128,7 @@ public class KMeansPP {
         return totalDistance / count;
     }
 
-    public static int SomeFunction() {
-        // Placeholder logic to calculate k
-        // Implement your own logic here to calculate k based on the data
-        return 3; // Example fixed value, replace this with your actual calculation logic
-    }
-
-    public static Map<String, double[]> readCSV(String csvFile) {
-        Map<String, double[]> dataMap = new HashMap<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
-            String line;
-            br.readLine();  // Skip the header
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(",");
-                String name = values[0];
-                double x = Double.parseDouble(values[1]);
-                double y = Double.parseDouble(values[2]);
-                dataMap.put(name, new double[]{x, y});
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-        return dataMap;
-    }
-
+    // K-Means++ centroids initialization
     public static double[][] getKMeansPPCentroids(double[][] data, int k) {
         List<double[]> centroids = new ArrayList<>();
         Random random = new Random();
@@ -173,17 +151,13 @@ public class KMeansPP {
                 distances[i] = minDist;
             }
 
-            // Select the next centroid with a probability proportional to the squared distance
-            double totalDist = Arrays.stream(distances).sum();
-            double r = random.nextDouble() * totalDist;
-            double cumulativeDist = 0.0;
-            for (int i = 0; i < data.length; i++) {
-                cumulativeDist += distances[i];
-                if (cumulativeDist >= r) {
-                    centroids.add(data[i]);
-                    break;
+            int maxDistIndex = 0;
+            for (int i = 1; i < distances.length; i++) {
+                if (distances[i] > distances[maxDistIndex]) {
+                    maxDistIndex = i;
                 }
             }
+            centroids.add(data[maxDistIndex]);
         }
 
         return centroids.toArray(new double[0][]);
@@ -265,20 +239,9 @@ public class KMeansPP {
             clusters.get(assignments[i]).add(names.get(i));
         }
 
-         for (int i = 0; i < k; i++) {
-             List<String> cluster = clusters.get(i);
-             cluster.sort(String::compareTo); // Sort the names in the cluster
-             System.out.println("Cluster #" + (i + 1) + " => " + String.join(" ", cluster));
-        }
-    }
-
-    public static void saveClustersToCSV(List<String> names, int[] assignments, int k, String filePath) {
-        try (FileWriter writer = new FileWriter(filePath)) {
-            for (int i = 0; i < names.size(); i++) {
-                writer.append(names.get(i)).append(",").append(String.valueOf(assignments[i] + 1)).append("\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        for (int i = 0; i < k; i++) {
+            List<String> cluster = clusters.get(i);
+            System.out.println("Cluster #" + (i + 1) + " => " + String.join(" ", cluster));
         }
     }
 }
