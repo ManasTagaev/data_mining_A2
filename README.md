@@ -27,3 +27,18 @@ To test the accuracy of the K-Means++ Algorithm go to k-meanspp-experiments repo
 ```
 sh experiment-1.sh
 ```
+
+## DBSCAN Algorithm
+### Running the DBSCAN Algorithm
+
+Firstly, in order to run the code, you need to compile it:
+```
+javac A2_G1_t2.java
+```
+
+Then, you can run it with both mu and eps given, or with only one of them (mu should be integer, eps should be floating point):
+```
+java A2_G1_t2 ./artd-31.csv {minPts} {eps}
+```
+
+
