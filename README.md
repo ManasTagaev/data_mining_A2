@@ -16,16 +16,12 @@ java A1_G1_t1 {path_to_data} {#of_clusters}
 {#of_clusters}: Specify the number of clusters as an integer value (e.g., 15 or 31). <br />
 Example: <br />
 ```
-java A2_G1_t1 ./artd-31.csv 15
+java A2_G1_t1 ./artset1.csv 15
 ```
 If the number of clusters are not given, then run it without specifying number of clusters. <br />
 Example: <br />
 ```
-java A2_G1_t1 ./artd-31.csv 
-```
-To test the accuracy of the K-Means++ Algorithm go to k-meanspp-experiments repository and run the following script. 
-```
-sh experiment-1.sh
+java A2_G1_t1 ./artset1.csv 
 ```
 
 ## DBSCAN Algorithm

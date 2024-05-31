@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public class KMeansPP {
+public class A2_G1_t1 {
 
     public static Map<String, double[]> readCSV(String csvFile) {
         Map<String, double[]> dataMap = new HashMap<>();
