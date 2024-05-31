@@ -5,7 +5,8 @@ import sys
 import time
 
 column_names = ['point', 'x', 'y', 'cluster']
-data = pd.read_csv('artset1.csv', names=column_names)
+data = pd.read_csv('.././artset1.csv', names=column_names)
+# data = pd.read_csv('.././artd-31.csv', names=column_names)
 
 grouped_data = data.groupby('cluster')
 
