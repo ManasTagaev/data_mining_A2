@@ -66,9 +66,11 @@ public class A2_G1_t2 {
 
             if (minPts == null) {
                 minPts = estimateMinPts();
+                System.out.println("Estimated MinPts: " + minPts);
             }
             if (eps == null) {
                 eps = estimateEps(points, minPts);
+                System.out.println("Estimated Eps: " + eps);
             }
 
             DBSCAN dbscan = new DBSCAN(points, minPts, eps);
